@@ -4,14 +4,16 @@
 #include <iostream>
 #include <string>
 
-UsbConnect::UsbConnect(UsbConfig* usb_config_){
-	usb_config = usb_config_;
+UsbConnect::UsbConnect(void){
+	;
 }
 
-int UsbConnect::openUsb(void){
+int UsbConnect::openUsb(UsbConfig* usb_config_){
 	int return_status = 0;
 	std::string str_tmp;
 
+	usb_config = usb_config_;
+	
 	libusb_init(&context);
 	handle = libusb_open_device_with_vid_pid(context, usb_config->vendor_id, usb_config->product_id);
 
