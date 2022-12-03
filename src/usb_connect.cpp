@@ -8,42 +8,60 @@ UsbConnect::UsbConnect(void){
 	;
 }
 
-int UsbConnect::openUsb(UsbConfig* usb_config_){
+void UsbConnect::setUsb(UsbConfig* usb_config_){
+	usb_config = usb_config_;
+}
+
+int UsbConnect::openUsb(void){
 	int return_status = 0;
 	std::string str_tmp;
-
-	usb_config = usb_config_;
 	
 	libusb_init(&context);
 	handle = libusb_open_device_with_vid_pid(context, usb_config->vendor_id, usb_config->product_id);
 
 	if(handle == NULL){
 		errorUsb("couldn't open.");
-		return 2;
+		return UsbStatus::USB_DEVICE_NOT_FOUND;
 	}
 
 	return_status = libusb_set_auto_detach_kernel_driver(handle, 1);
 
 	if(return_status != libusb_error::LIBUSB_SUCCESS){
 		errorUsb(str_tmp.append(libusb_error_name(return_status)) + " couldn't detach driver.");
-		return 2;
+		return UsbStatus::USB_OTHER_ERROR;
 	}
 
 	return_status = libusb_claim_interface(handle, usb_config->b_interface_number);
 
 	if(return_status != libusb_error::LIBUSB_SUCCESS){
 		errorUsb("In clame_interface " + str_tmp.append(libusb_error_name(return_status)));
-		return 2;
+
+		switch(return_status){
+			case libusb_error::LIBUSB_ERROR_NOT_FOUND:
+				return UsbStatus::USB_DEVICE_NOT_FOUND:
+			case libusb_error::LIBUSB_ERROR_BUSY:
+				return UsbStatus::USB_BUSY;
+			case libusb_error::LIBUSB_ERROR_NO_DEVICE:
+				return UsbStatus::USB_DISCONNECTED;
+			default:
+				return UsbStatus::USB_OTHER_ERROR;
+		}
 	}
 
 	return_status = libusb_set_interface_alt_setting(handle, usb_config->b_interface_number, 0);
 
 	if(return_status == libusb_error::LIBUSB_ERROR_NO_DEVICE){
-		errorUsb("In altanate setting "+ str_tmp.append(libusb_error_name(return_status)));
-		return 2;
+		errorUsb("In altanate setting " + str_tmp.append(libusb_error_name(return_status)));
+		switch(return_status){
+			case libusb_error::LIBUSB_ERROR_NOT_FOUND:
+				return UsbStatus::USB_DEVICE_NOT_FOUND;
+			case libusb_error::LIBUSB_ERROR_NO_DEVICE:
+				return UsbStatus::USB_DISCONNECTED;
+			default:
+				return UsbStatus::USB_OTHER_ERROR;
 	}
 
-	return 0;
+	return UsbStatus::USB_SUCCESS;
 }
 
 int UsbConnect::writeUsb(const std::string& write_data_, EndPoint end_point_, uint32_t timeout_){
@@ -56,7 +74,21 @@ int UsbConnect::writeUsb(const std::string& write_data_, EndPoint end_point_, ui
 	if(return_status != libusb_error::LIBUSB_SUCCESS){
 		errorUsb("In writing data " + str_tmp.append(libusb_error_name(return_status)));
 
-		return -1;
+		switch(return_status){
+			case libusb_error::LIBSUSB_ERROR_TIMEOUT:
+				return UsbStatus::USB_TIMEOUT;
+			case libusb_error::LIBUSB_ERROR_PIPE:
+				return UsbStatus::USB_ENDPOINT_HALT;
+			case libusb_error::LIBUSB_ERROR_OVERFLOR:
+				return UsbStatus::USB_OVERFLOW;
+			case libusb_error::LIBUSB_ERROR_NO_DEVICE:
+				return UsbStatus::USB_DISCONNECTED;
+			case libusb_error::LIBUSB_ERROR_BUSY:
+				return UsbStatus::USB_BUSY;
+			case libusb_error::LIBUSB_INVALID_PARAM;
+				return UsbStatus::USB_INVALID_PARAM;
+			default:
+				return UsbStatus::USB_OTHER_ERROR;
 	}
 
 	return write_size;
@@ -72,7 +104,21 @@ int UsbConnect::writeUsb(const uint8_t* write_data_, uint32_t data_size_, EndPoi
 	if(return_status != libusb_error::LIBUSB_SUCCESS){
 		errorUsb("In writing data " + str_tmp.append(libusb_error_name(return_status)));
 
-		return -1;
+		switch(return_status){
+			case libusb_error::LIBSUSB_ERROR_TIMEOUT:
+				return UsbStatus::USB_TIMEOUT;
+			case libusb_error::LIBUSB_ERROR_PIPE:
+				return UsbStatus::USB_ENDPOINT_HALT;
+			case libusb_error::LIBUSB_ERROR_OVERFLOR:
+				return UsbStatus::USB_OVERFLOW;
+			case libusb_error::LIBUSB_ERROR_NO_DEVICE:
+				return UsbStatus::USB_DISCONNECTED;
+			case libusb_error::LIBUSB_ERROR_BUSY:
+				return UsbStatus::USB_BUSY;
+			case libusb_error::LIBUSB_INVALID_PARAM;
+				return UsbStatus::USB_INVALID_PARAM;
+			default:
+				return UsbStatus::USB_OTHER_ERROR;
 	}
 
 	return write_size;
@@ -88,7 +134,25 @@ int UsbConnect::readUsb(uint8_t* read_data_, uint32_t data_size_, EndPoint end_p
 	if(return_status != libusb_error::LIBUSB_SUCCESS){
 		errorUsb("In reading data " + str_tmp.append(libusb_error_name(return_status)));
 
-		return -1;
+		switch(return_status){
+			case libusb_error::LIBSUSB_ERROR_TIMEOUT:
+				return UsbStatus::USB_TIMEOUT;
+			case libusb_error::LIBUSB_ERROR_PIPE:
+				return UsbStatus::USB_ENDPOINT_HALT;
+			case libusb_error::LIBUSB_ERROR_OVERFLOR:
+				return UsbStatus::USB_OVERFLOW;
+			case libusb_error::LIBUSB_ERROR_NO_DEVICE:
+				if(openUsb() != UsbStatus::USB_SUCCESS){
+					return UsbStatus::USB_DISCONNECTED;
+				}else{
+					
+				}
+			case libusb_error::LIBUSB_ERROR_BUSY:
+				return UsbStatus::USB_BUSY;
+			case libusb_error::LIBUSB_INVALID_PARAM;
+				return UsbStatus::USB_INVALID_PARAM;
+			default:
+				return UsbStatus::USB_OTHER_ERROR;
 	}
 	
 	return read_size;
