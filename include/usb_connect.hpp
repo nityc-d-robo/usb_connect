@@ -13,9 +13,9 @@ typedef struct UsbConfig{
 	int b_interface_number;
 }UsbConfig;
 
-class UsbConncet{
+class UsbConnect{
 	public:
-		UsbConnect(const UsbConfig* usb_config_);
+		UsbConnect(UsbConfig* usb_config_);
 		int openUsb(void);
 		int writeUsb(const std::string& write_data_, EndPoint end_point_, uint32_t timeout_);
 		int writeUsb(const uint8_t* wite_data_, uint32_t data_size_, EndPoint end_point_, uint32_t timeout_);
