@@ -47,15 +47,10 @@ int UsbConnect::openUsb(void){
 int UsbConnect::writeUsb(const std::string& write_data_, EndPoint end_point_, uint32_t timeout_){
 	int return_status = 0;
 	int write_size = 0;
-	uint8_t* data_tmp = new uint8_t[write_data_.size() + 1];
 	std::string str_tmp;
-
-	std::char_traits<char>::copy((char*)data_tmp, write_data_.c_str(), write_data_.size() + 1);
 
 	return_status = libusb_bulk_transfer(handle, libusb_endpoint_direction::LIBUSB_ENDPOINT_OUT | end_point_, (unsigned char*)write_data_.c_str(), write_data_.size(), &write_size, timeout_);
 
-	delete[] data_tmp;
-	
 	if(return_status != libusb_error::LIBUSB_SUCCESS){
 		errorUsb("In writing data " + str_tmp.append(libusb_error_name(return_status)));
 
