@@ -35,6 +35,7 @@ class UsbConnect{
 		int readUsb(uint8_t* read_data_, uint32_t data_size_, EndPoint end_point_, uint32_t timeout_);
 		void closeUsb(void);
 		void __attribute__((weak)) errorUsb(std::string error_str_);
+		void __attribute__((weak)) infoUsb(std::string info_str_);
 	private:
 		libusb_context* context;
 		libusb_device_handle* handle;
