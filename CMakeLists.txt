@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16.3)
 project(libusb_connect CXX)
 
+set(CMAKE_CXX_FLAG "-lusb-1.0")
+
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 
 include_directories(include)
@@ -9,6 +11,10 @@ link_directories(include)
 
 add_library(usb_connect SHARED
 	src/usb_connect.cpp
+)
+
+target_link_libraries(usb_connect
+	usb-1.0
 )
 
 set_target_properties(usb_connect PROPERTIES
